@@ -1,0 +1,34 @@
+html, body{
+	margin:0;
+	padding:0;
+	width: 100%;
+	height: 100%;
+}
+
+body{
+	background: #60A38C;
+}
+
+#container{
+	text-align: center;
+}
+
+.io-string{
+	margin-top: 5%;
+	font-size: 100px;
+	color: #E4E8D0;
+	text-shadow: #747171 2px 2px;
+	clear: both;
+}
+
+.io-morse{
+	font-size: 45px;
+	color: #E4E8D0;
+	text-shadow: #747171 2px 2px;
+	clear: both;
+	font-family: serif;
+}
+
+.io-morse:read-write:focus, .io-string:read-write:focus {
+    outline: 0px solid transparent;
+}
