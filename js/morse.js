@@ -1,8 +1,10 @@
 var Morse = (function(){
 
-	var wordDelimiter = '|';
+	var wordDelimiter = '  ';
+	var charDelimiter = ' ';
 	var line = '-';
 	var dot = '.';
+	var unknownInput = '*';
 
 	var charmap = {
 		'a': '.-',
@@ -99,11 +101,11 @@ var Morse = (function(){
 
 
 	var getPattern = function(c){
-		return (charmap[c.toLowerCase()] || '*') + ' ';
+		return (charmap[c.toLowerCase()] || unknownInput) + charDelimiter;
 	};
 
 	var getChar = function(p){
-		return (patternmap[p.toLowerCase()] || '*');
+		return (patternmap[p.toLowerCase()] || unknownInput);
 	};
 
 	var toMorse = function(string){
@@ -133,7 +135,7 @@ var Morse = (function(){
 
 		// Iterate over words
 		words.forEach(function(e){
-			e = e.trim().split(' ');
+			e = e.trim().split(charDelimiter);
 			
 			for (var i = 0; i < e.length; i++) {
 				string += (getChar(e[i]) || '');
