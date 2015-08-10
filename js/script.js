@@ -5,12 +5,14 @@
 	var bPlay = document.getElementById('b-play');
 
 	tfString.onkeyup = function(event){
-		var morse = Morse.toMorse(event.srcElement.textContent);
+		var element = event.srcElement || event.target;
+		var morse = Morse.toMorse(element.textContent);
 		tfMorse.textContent = morse;
 	};
 
 	tfMorse.onkeyup = function(event){
-		var string = Morse.fromMorse(event.srcElement.textContent);
+		var element = event.srcElement || event.target;
+		var string = Morse.fromMorse(element.textContent);
 		tfString.textContent = string;
 	};
 
