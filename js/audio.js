@@ -80,4 +80,4 @@ var Audio = (function(audioContext){
 	return {status: status.ready,
 		play: play};
 	
-})(AudioContext||webkitAudioContext);
+})(window.AudioContext||window.webkitAudioContext);
