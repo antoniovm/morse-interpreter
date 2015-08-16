@@ -1,12 +1,23 @@
-var Audio = (function(audioContext){
+navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia ||
+                      navigator.mozGetUserMedia || navigator.msGetUserMedia;
 
-	// Status
-	var status = {ready: "ready", 
-				error: "error"};
+var Audio = (function(audioContext,navigator){
+
+	// Status Codes
+	var statusCodes = {ready: "Load success", 
+				audioContextError: "Error obtaining AudioContext",
+				getUserMediaError: "Error obtaining getUserMedia"};
+
+	// Current status
+	var status = statusCodes.ready;
 
 	if (!audioContext) {
-		return {status: status.error};
+		return {status: statusCodes.audioContextError};
 	}
+
+	if (!navigator.getUserMedia) {
+		status = statusCodes.getUserMediaError;	
+	};
 
 	// Morse config
 	var timeReference = 0.05; 			//seconds
@@ -47,6 +58,11 @@ var Audio = (function(audioContext){
 		o.stop(duration);
 	};
 
+	var processInput = function(event){
+		var frame = event.inputBuffer.getChannelData(0);
+		return;
+	};
+
 	var play = function(morse){
 		var time = audioContext.currentTime;
 
@@ -77,7 +93,29 @@ var Audio = (function(audioContext){
 		
 	};
 
-	return {status: status.ready,
-		play: play};
+	var capture = function(){
+		if (status == statusCodes.getUserMediaError) {
+			return status;
+		};
+
+		navigator.getUserMedia({audio: true}, function(stream) {
+			var audioSrc = audioContext.createMediaStreamSource(stream);
+			var scriptProcessor = audioContext.createScriptProcessor(1024, 1, 1);
+			
+			scriptProcessor.onaudioprocess = processInput;
+			audioSrc.connect(scriptProcessor);
+			scriptProcessor.connect(audioContext.destination);
+		},
+
+		function(err){
+			console.log(err);
+		});
+
+
+	};
+
+	return {status: status,
+		play: play,
+		capture: capture};
 	
-})(window.AudioContext||window.webkitAudioContext);
+})((window.AudioContext || window.webkitAudioContext),navigator);
