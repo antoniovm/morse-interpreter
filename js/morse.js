@@ -173,16 +173,13 @@ var Morse = (function(){
 		symbolsSequence.push(timeStamp - lastTapStamp);
 
 		lastTapStamp = timeStamp;
+
+		return processTapPattern();
 	};
 
 	var processTapPattern = function(){
-		var minUp = Infinity;
-		var minDown = Infinity;
-
 		var maxSymbols = symbolsSequence.max();
 		var minSymbols = symbolsSequence.min();
-
-		// minUp = whitespacesSequence.min();
 
 		var minMean = defaultDotTime;
 
@@ -206,9 +203,10 @@ var Morse = (function(){
 		for (var i = 0; i < processedUp.length; i++) {
 			
 			morseString += processedUp[i] < 8 ? 
-								(processedUp[i] < 4 ? 
-									'':
-									' ')  : '  ';
+							(processedUp[i] < 4 ? 
+							'':
+							' '): 
+							'  ';
 
 			morseString += processedDown[i + 1] < 3 ? 
 								symbols.dot : symbols.line;

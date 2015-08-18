@@ -30,7 +30,10 @@
 	});
 
 	bTap.addEventListener(tapUpEvent,function(event){
-		Morse.tapUp(event.timeStamp);
+		var morse = Morse.tapUp(event.timeStamp);
+		var string = Morse.fromMorse(morse);
+		tfString.textContent = string;
+		tfMorse.textContent = morse;
 	});
 
 	// Init
