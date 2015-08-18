@@ -1,10 +1,11 @@
 var Morse = (function(){
 
-	var wordDelimiter = '  ';
-	var charDelimiter = ' ';
-	var line = '-';
-	var dot = '.';
-	var unknownInput = '*';
+	var symbols = {
+		line: '-',
+		dot: '.',
+		wordDelimiter: '  ',
+		charDelimiter: ' ',
+		unknownInput: '*'};
 
 	var charmap = {
 		'a': '.-',
@@ -49,7 +50,7 @@ var Morse = (function(){
 		'?': '..--.',
 		'"': '.-..-.',
 		'!': '-.-.--',
-		' ': wordDelimiter
+		' ': symbols.wordDelimiter
 	};
 
 	var patternmap = {
@@ -95,17 +96,30 @@ var Morse = (function(){
 		'--..-': ',',
 		'..--.': '?',
 		'.-..-.': '"',
-		'-.-.--': '!',
-		wordDelimiter: ' '
+		'-.-.--': '!'
 	};
 
+	patternmap[symbols.wordDelimiter] = ' ';
+
+	var symbolsSequence = [];
+	var whitespacesSequence = [];
+	var lastTapStamp;
+	var defaultDotTime = 50; //Miliseconds
+
+	Array.prototype.max = function() {
+	  return Math.max.apply(null, this);
+	};
+
+	Array.prototype.min = function() {
+	  return Math.min.apply(null, this);
+	};
 
 	var getPattern = function(c){
-		return (charmap[c.toLowerCase()] || unknownInput) + charDelimiter;
+		return (charmap[c.toLowerCase()] || symbols.unknownInput) + symbols.charDelimiter;
 	};
 
 	var getChar = function(p){
-		return (patternmap[p.toLowerCase()] || unknownInput);
+		return (patternmap[p.toLowerCase()] || symbols.unknownInput);
 	};
 
 	var toMorse = function(string){
@@ -125,17 +139,17 @@ var Morse = (function(){
 
 		// Clean input
 		morse = morse.trim()
-					.replace(/\ \ +/g,wordDelimiter)// Word delimiter
-					.replace(/\_/g,line)			// Line representation
-					.replace(/\·/g,dot)				// Dot representation
-					.replace(/[^\.\-\ \|]/g,'');	// Remove forbidden characters
+					.replace(/\ \ +/g,symbols.wordDelimiter)// Word delimiter
+					.replace(/\_/g,symbols.line)			// Line representation
+					.replace(/\·/g,symbols.dot)				// Dot representation
+					.replace(/[^\.\-\ \|]/g,'');			// Remove forbidden characters
 
 		// List of words in morse
-		var words = morse.split(wordDelimiter);
+		var words = morse.split(symbols.wordDelimiter);
 
 		// Iterate over words
 		words.forEach(function(e){
-			e = e.trim().split(charDelimiter);
+			e = e.trim().split(symbols.charDelimiter);
 			
 			for (var i = 0; i < e.length; i++) {
 				string += (getChar(e[i]) || '');
@@ -147,7 +161,71 @@ var Morse = (function(){
 		return string.trim();
 	};
 
+	var tapDown = function(timeStamp){
+		if (lastTapStamp) {
+			whitespacesSequence.push(timeStamp - lastTapStamp);
+		};
+
+		lastTapStamp = timeStamp;
+	};
+
+	var tapUp = function(timeStamp){
+		symbolsSequence.push(timeStamp - lastTapStamp);
+
+		lastTapStamp = timeStamp;
+	};
+
+	var processTapPattern = function(){
+		var minUp = Infinity;
+		var minDown = Infinity;
+
+		var maxSymbols = symbolsSequence.max();
+		var minSymbols = symbolsSequence.min();
+
+		// minUp = whitespacesSequence.min();
+
+		var minMean = defaultDotTime;
+
+		if (Math.round(maxSymbols/minSymbols) >= 3) {
+			minMean = minSymbols;
+		}
+
+		var processedUp = [];
+		var processedDown = [];
+
+		whitespacesSequence.forEach(function(e,i){
+			processedUp.push(Math.round(e/minMean));
+		});
+
+		symbolsSequence.forEach(function(e,i){
+			processedDown.push(Math.round(e/minMean));
+		});
+
+		var morseString = processedDown[0] < 3 ? symbols.dot : symbols.line;
+
+		for (var i = 0; i < processedUp.length; i++) {
+			
+			morseString += processedUp[i] < 8 ? 
+								(processedUp[i] < 4 ? 
+									'':
+									' ')  : '  ';
+
+			morseString += processedDown[i + 1] < 3 ? 
+								symbols.dot : symbols.line;
+
+		};
+
+		return morseString;
+	};
+
 	return {toMorse: toMorse,
-		fromMorse: fromMorse};
+		fromMorse: fromMorse,
+		tapDown: tapDown,
+		tapUp: tapUp,
+		processTapPattern: processTapPattern,
+		getConfig: function(){
+			return {symbols: symbols,
+				timeReference: defaultDotTime};
+		}};
 
 })();
