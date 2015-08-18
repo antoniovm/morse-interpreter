@@ -31,11 +31,7 @@ body{
     outline: 0px solid transparent;
 }
 
-#c-play{
-
-}
-
-#b-play{
+button{
 	background: none;
     font-size: 3rem;
     color: #E4E8D0;
@@ -48,11 +44,11 @@ body{
     box-shadow: #747171 0px 2px;
 }
 
-#b-play:hover{
+button:hover{
 	background: rgba(255, 255, 255, 0.1);
 }
 
-#b-play:active{
+button:active{
 	background: #E4E8D0;
 	color: #60A38C;
     border: 2px solid #60A38C;

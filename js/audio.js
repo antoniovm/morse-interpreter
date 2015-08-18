@@ -1,12 +1,13 @@
 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia ||
                       navigator.mozGetUserMedia || navigator.msGetUserMedia;
 
-var Audio = (function(audioContext,navigator){
+var Audio = (function(audioContext,navigator,Morse){
 
 	// Status Codes
 	var statusCodes = {ready: "Load success", 
 				audioContextError: "Error obtaining AudioContext",
-				getUserMediaError: "Error obtaining getUserMedia"};
+				getUserMediaError: "Error obtaining getUserMedia",
+				morseError: "Error obtaining Morse module"};
 
 	// Current status
 	var status = statusCodes.ready;
@@ -15,14 +16,18 @@ var Audio = (function(audioContext,navigator){
 		return {status: statusCodes.audioContextError};
 	}
 
+	if (!Morse) {
+		return {status: statusCodes.morseError};
+	};
+
 	if (!navigator.getUserMedia) {
 		status = statusCodes.getUserMediaError;	
 	};
 
 	// Morse config
-	var timeReference = 0.05; 			//seconds
-	var dotDuration = timeReference;	// .
-	var lineDuration = dotDuration * 3;	// -
+	var timeReference = Morse.getConfig().timeReference / 1000.0;	//seconds
+	var dotDuration = timeReference;								// .
+	var lineDuration = dotDuration * 3;								// -
 	var symbolSpaceDuration = dotDuration;
 	var patternSpaceDuration = dotDuration * 2;
 	var wordSpaceDuration = dotDuration * 4;
@@ -33,6 +38,8 @@ var Audio = (function(audioContext,navigator){
 		type: "sine",
 		frequency: 880
 	};
+
+	var playing = false;
 
 	var getDurationFromSymbol = function(symbol){
 		switch(symbol){
@@ -64,14 +71,21 @@ var Audio = (function(audioContext,navigator){
 	};
 
 	var play = function(morse){
+		if (playing) {
+			return;
+		};
+
+		playing = true;
+
 		var time = audioContext.currentTime;
+		var morseSymbols = Morse.getConfig().symbols;
 
 		// List of words in morse
-		var words = morse.split('  ');
+		var words = morse.split(morseSymbols.wordDelimiter);
 
 		// Iterate over words
 		words.forEach(function(word){
-			word = word.trim().split(' ');
+			word = word.trim().split(morseSymbols.charDelimiter);
 			
 			// Iterate over pattern
 			word.forEach(function(pattern){
@@ -90,6 +104,13 @@ var Audio = (function(audioContext,navigator){
 			time += wordSpaceDuration;
 		});
 
+		// Trim silence timing
+		time -= (wordSpaceDuration + patternSpaceDuration + symbolSpaceDuration);
+
+		// Avoid multiple playbacks at the same time
+		setTimeout(function(){
+			playing = false;
+		}, (time - audioContext.currentTime) * 1000); 
 		
 	};
 
@@ -118,4 +139,4 @@ var Audio = (function(audioContext,navigator){
 		play: play,
 		capture: capture};
 	
-})((window.AudioContext || window.webkitAudioContext),navigator);
+})((window.AudioContext || window.webkitAudioContext),navigator,Morse);
